@@ -45,7 +45,7 @@ class SDXLControlnetInpaint:
         ratio = np.sqrt(1024. * 1024. / (width * height))
         new_width, new_height = int(width * ratio) // 8 * 8, int(height * ratio) // 8 * 8
         image = image.resize((new_width, new_height))
-        mask = mask.reisze((new_width, new_height))
+        mask = mask.resize((new_width, new_height))
 
         mask_data = np.array(mask)
         controlnet_image = np.array(image)

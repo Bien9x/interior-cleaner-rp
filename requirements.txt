@@ -1,1 +1,5 @@
+simple_lama_inpainting
+transformers
+diffusers
+timm
 git+https://github.com/sberbank-ai/Real-ESRGAN.git
