@@ -9,6 +9,9 @@ import numpy as np
 class Lama(InpaintModel):
     def __init__(self, force_cpu=False):
         super().__init__(force_cpu)
+        self.model = None
+
+    def setup(self):
         self.model = SimpleLama()
 
     def _forward(self, image: Image, mask: Image):

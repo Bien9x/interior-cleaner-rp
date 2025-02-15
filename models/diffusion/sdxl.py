@@ -1,13 +1,13 @@
 import torch
 import numpy as np
 from PIL import Image
-from diffusers import EulerAncestralDiscreteScheduler, AutoencoderKL
+from diffusers import AutoencoderKL
 
 import config
 from modules.controlnet_plus import ControlNetModel_Union, StableDiffusionXLControlNetUnionInpaintPipeline
 from diffusers import DPMSolverMultistepScheduler
 from utils import pil_ensure_rgb
-
+import os
 
 class SDXLControlnetInpaint:
     def __init__(self):
@@ -34,7 +34,11 @@ class SDXLControlnetInpaint:
                  controlnet_scale: float = 0.9,
                  strength: float = 0.7,
                  num_steps: int = 50,
-                 num_images: int = 1):
+                 num_images: int = 1,
+                 seed=None):
+        if seed is None:
+            seed = int.from_bytes(os.urandom(2), "big")
+            print(f"Using seed: {seed}")
         image = pil_ensure_rgb(image)
         mask = mask.convert('L')
         height, width = image.size
@@ -56,7 +60,7 @@ class SDXLControlnetInpaint:
                            controlnet_conditioning_scale=controlnet_scale,
                            strength=strength,
                            num_images_per_prompt=num_images,
-                           # generator=generator,
+                           generator=torch.Generator().manual_seed(seed),
                            width=width,
                            height=height,
                            num_inference_steps=50,

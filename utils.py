@@ -89,3 +89,22 @@ def pad_img_to_modulo(img: np.ndarray, mod: int, square: bool = False, min_size:
         ((0, out_height - height), (0, out_width - width), (0, 0)),
         mode="symmetric",
     )
+
+
+def resize_image(input_image: Image.Image | np.ndarray, resolution: int) -> Image.Image:
+    if not isinstance(input_image, np.ndarray):
+        input_image = np.array(input_image, dtype=np.uint8)
+    if len(input_image.shape) == 3:  # RGB
+        H, W, C = input_image.shape
+    else:  # gray-scale
+        H, W = input_image.shape
+    H = float(H)
+    W = float(W)
+    k = float(resolution) / min(H, W)
+    H *= k
+    W *= k
+    H = int(np.round(H / 64.0)) * 64
+    W = int(np.round(W / 64.0)) * 64
+    img = cv2.resize(input_image, (W, H), interpolation=cv2.INTER_LANCZOS4 if k > 1 else cv2.INTER_AREA)
+    img = Image.fromarray(img)
+    return img
