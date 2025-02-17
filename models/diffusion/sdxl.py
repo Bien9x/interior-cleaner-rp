@@ -24,6 +24,7 @@ class SDXLControlnetInpaint:
             torch_dtype=torch.float16,
         )
         self.pipe.scheduler = DPMSolverMultistepScheduler.from_config(self.pipe.scheduler.config)
+        self.pipe=self.pipe.to(self.device)
 
     def __call__(self,
                  image: Image,
@@ -41,7 +42,7 @@ class SDXLControlnetInpaint:
             print(f"Using seed: {seed}")
         image = pil_ensure_rgb(image)
         mask = mask.convert('L')
-        height, width = image.size
+        width, height = image.size
         ratio = np.sqrt(1024. * 1024. / (width * height))
         new_width, new_height = int(width * ratio) // 8 * 8, int(height * ratio) // 8 * 8
         image = image.resize((new_width, new_height))

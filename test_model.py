@@ -38,18 +38,18 @@ def test_repaint():
     repainter = SDXLControlnetInpaint()
     repainter.setup()
     print('Loading image...')
-    image = Image.open('tmp/tulanh_hd.jpg')
+    image = Image.open('tmp/tulanh_lama.png')
     mask = Image.open('tmp/tulanh_mask.png')
     prompt = 'no humans, indoors, scenery, window, ceiling light, curtains, ceiling, building, apartment, bed'
     print(f'Image shape: {image.size} - {mask.size}')
     print('Running diffusion...')
     image_out = repainter(image, mask, prompt)
-    image_out.save('tmp/tulanh_out.png')
+    image_out[0].save('tmp/tulanh_out.png')
     print('Done')
 
 if __name__ == '__main__':
-    # print('Testing lama...')
-    # test_lama()
+    #print('Testing lama...')
+    #test_lama()
     # print('Testing prompt...')
     # test_prompt_generator()
     print('Testing diffusion...')
