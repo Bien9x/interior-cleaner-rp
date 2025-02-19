@@ -1,3 +1,4 @@
+import cv2
 import torch
 import numpy as np
 from PIL import Image
@@ -36,12 +37,20 @@ class SDXLControlnetInpaint:
                  strength: float = 0.7,
                  num_steps: int = 50,
                  num_images: int = 1,
+                 grow_mask_by: int = 32,
                  seed=None):
         if seed is None:
             seed = int.from_bytes(os.urandom(2), "big")
             print(f"Using seed: {seed}")
         image = pil_ensure_rgb(image)
         mask = mask.convert('L')
+
+        if grow_mask_by > 0:
+            mask_data = np.asarray(mask)
+            kernel = np.ones((grow_mask_by, grow_mask_by), np.uint8)
+            mask_data = cv2.dilate(mask_data,kernel)
+            mask = Image.fromarray(mask_data)
+
         width, height = image.size
         ratio = np.sqrt(1024. * 1024. / (width * height))
         new_width, new_height = int(width * ratio) // 8 * 8, int(height * ratio) // 8 * 8
@@ -52,11 +61,11 @@ class SDXLControlnetInpaint:
         controlnet_image = np.array(image)
         controlnet_image[mask_data > 0] = 0
         controlnet_image = Image.fromarray(controlnet_image)
-        images = self.pipe(prompt=[prompt] * 1,
+        images = self.pipe(prompt=prompt,
                            image=image,
                            mask_image=mask,
                            control_image_list=[0, 0, 0, 0, 0, 0, 0, controlnet_image],
-                           negative_prompt=[neg_prompt] * 1,
+                           negative_prompt=neg_prompt,
                            guidance_scale=guidance_scale,
                            controlnet_conditioning_scale=controlnet_scale,
                            strength=strength,
@@ -64,7 +73,7 @@ class SDXLControlnetInpaint:
                            generator=torch.Generator().manual_seed(seed),
                            width=width,
                            height=height,
-                           num_inference_steps=50,
+                           num_inference_steps=num_steps,
                            union_control=True,
                            union_control_type=torch.Tensor([0, 0, 0, 0, 0, 0, 0, 1]),
                            ).images

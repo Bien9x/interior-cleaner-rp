@@ -4,31 +4,25 @@ import time
 from runpod.serverless.utils import rp_download, rp_cleanup, rp_upload
 from runpod.serverless.utils.rp_validator import validate
 import os
+from runner import Predictor
+import base64
 
 INPUT_SCHEMA = {
-    'prompt': {
+    'image_path': {
         'type': str,
         'required': True
     },
-    'width': {
-        'type': int,
-        'required': False,
-        'default': 768,
-        'constraints': lambda width: width in [128, 256, 384, 448, 512, 576, 640, 704, 768, 832, 896, 960, 1024]
+    'mask_image_path': {
+        'type': str,
+        'required': True
     },
-    'height': {
-        'type': int,
-        'required': False,
-        'default': 768,
-        'constraints': lambda height: height in [128, 256, 384, 448, 512, 576, 640, 704, 768, 832, 896, 960, 1024]
-    },
-    'num_outputs': {
+    'num_images': {
         'type': int,
         'required': False,
         'default': 1,
         'constraints': lambda num_outputs: num_outputs in range(1, 4)
     },
-    'num_inference_steps': {
+    'num_steps': {
         'type': int,
         'required': False,
         'default': 50,
@@ -37,15 +31,26 @@ INPUT_SCHEMA = {
     'guidance_scale': {
         'type': float,
         'required': False,
-        'default': 7.5,
+        'default': 5.0,
         'constraints': lambda guidance_scale: 0 <= guidance_scale <= 20
     },
-    'scheduler': {
-        'type': str,
+    'controlnet_scale': {
+        'type': float,
         'required': False,
-        'default': 'DPMSolverMultistep',
-        'constraints': lambda scheduler: scheduler in ['DDIM', 'K_EULER', 'DPMSolverMultistep', 'K_EULER_ANCESTRAL',
-                                                       'PNDM', 'KLMS']
+        'default': 0.9,
+        'constraints': lambda guidance_scale: 0 <= guidance_scale <= 1
+    },
+    'strength': {
+        'type': float,
+        'required': False,
+        'default': 0.7,
+        'constraints': lambda guidance_scale: 0 <= guidance_scale <= 1
+    },
+    'grow_mask_by': {
+        'type': int,
+        'required': False,
+        'default': 0.7,
+        'constraints': lambda grow_mask_by: grow_mask_by in range(1, 100)
     },
     'seed': {
         'type': int,
@@ -54,14 +59,32 @@ INPUT_SCHEMA = {
     }
 }
 
+model = Predictor()
+model.setup()
+
+
+def save_and_upload_images(images, job_id):
+    os.makedirs(f"/{job_id}", exist_ok=True)
+    image_urls = []
+    for index, image in enumerate(images):
+        image_path = os.path.join(f"/{job_id}", f"{index}.png")
+        image.save(image_path)
+
+        if os.environ.get('BUCKET_ENDPOINT_URL', False):
+            image_url = rp_upload.upload_image(job_id, image_path)
+            image_urls.append(image_url)
+        else:
+            with open(image_path, "rb") as image_file:
+                image_data = base64.b64encode(
+                    image_file.read()).decode("utf-8")
+                image_urls.append(f"data:image/png;base64,{image_data}")
+
+    rp_cleanup.clean([f"/{job_id}"])
+    return image_urls
+
+
 def handler(job):
-    '''
-    Takes in raw data from the API call, prepares it for the model.
-    Passes the data to the model to get the results.
-    Prepares the resulting output to be returned to the API call.
-    '''
     job_input = job['input']
-    job_output = []
 
     # -------------------------------- Validation -------------------------------- #
     validated_input = validate(job_input, INPUT_SCHEMA)
@@ -70,37 +93,24 @@ def handler(job):
 
     valid_input = validated_input['validated_input']
 
-    image_paths = model_runner.predict(
-        prompt=valid_input['prompt'],
-        negative_prompt=valid_input['negative_prompt'],
-        width=valid_input['width'],
-        height=valid_input['height'],
-        num_outputs=valid_input['num_outputs'],
-        num_inference_steps=valid_input['num_inference_steps'],
+    images = model.predict(
+        image_path=valid_input['image_path'],
+        image_mask_path=valid_input['image_mask_path'],
+        num_images=valid_input['num_images'],
+        num_steps=valid_input['num_steps'],
         guidance_scale=valid_input['guidance_scale'],
-        scheduler=valid_input['scheduler'],
+        controlnet_scale=valid_input['controlnet_scale'],
+        strength=valid_input['strength'],
+        grow_mask_by=valid_input['grow_mask_by'],
         seed=valid_input['seed']
     )
-
-    for index, img_path in enumerate(image_paths):
-        image_url = rp_upload.upload_image(job['id'], img_path)
-
-        job_output.append({
-            "image": image_url,
-            "prompt": job_input["prompt"],
-            "negative_prompt": job_input["negative_prompt"],
-            "width": job_input['width'],
-            "height": job_input['height'],
-            "num_inference_steps": job_input['num_inference_steps'],
-            "guidance_scale": job_input['guidance_scale'],
-            "scheduler": job_input['scheduler'],
-            "seed": job_input['seed'] + index
-        })
-
+    image_urls = save_and_upload_images(images, job['id'])
     # Remove downloaded input objects
     # rp_cleanup.clean(['input_objects'])
-
-    return job_output
+    results = {
+        "images": image_urls
+    }
+    return results
 
 
 if __name__ == '__main__':

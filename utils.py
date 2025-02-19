@@ -2,7 +2,9 @@ from typing import List, Optional
 import cv2
 import numpy as np
 from PIL import Image
-
+from io import BytesIO
+import base64
+import requests
 
 def pil_ensure_rgb(image: Image.Image) -> Image.Image:
     # convert to RGB/RGBA if not already (deals with palette images etc.)
@@ -108,3 +110,44 @@ def resize_image(input_image: Image.Image | np.ndarray, resolution: int) -> Imag
     img = cv2.resize(input_image, (W, H), interpolation=cv2.INTER_LANCZOS4 if k > 1 else cv2.INTER_AREA)
     img = Image.fromarray(img)
     return img
+
+
+def convert_to_base64(image: Image.Image) -> str:
+    """Convert image to base64 string"""
+    buffered = BytesIO()
+    image.save(buffered, format="PNG")
+    return base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+def load_image(image_source: str, client = None) -> Image.Image:
+    """Get image from URL, GCP URL, or base64 string"""
+    if not image_source:
+        raise ValueError("Image source cannot be empty")
+
+    try:
+        if image_source.startswith("http"):
+            response = requests.get(image_source, timeout=10)  # Add timeout
+            response.raise_for_status()  # Raise error for bad status codes
+            return Image.open(BytesIO(response.content))
+        elif image_source.startswith("gs://"):
+            if client is None:
+                raise ValueError("GCS client is required")
+            # Use storage client to download from GCS
+            bucket_name = image_source.split("/")[2]
+            blob_path = "/".join(image_source.split("/")[3:])
+
+            bucket = client.bucket(bucket_name)
+            blob = bucket.blob(blob_path)
+
+            image_bytes = blob.download_as_bytes()
+            return Image.open(BytesIO(image_bytes))
+        else:
+            # Validate base64 string
+            try:
+                image_data = base64.b64decode(image_source)
+            except Exception:
+                raise ValueError("Invalid base64 string")
+            return Image.open(BytesIO(image_data))
+    except requests.RequestException as e:
+        raise ValueError(f"Failed to fetch image from URL: {str(e)}")
+    except Exception as e:
+        raise ValueError(f"Failed to load image: {str(e)}")
