@@ -1,4 +1,6 @@
+torch
 simple_lama_inpainting
 transformers
 diffusers
 timm
+google-cloud-storage

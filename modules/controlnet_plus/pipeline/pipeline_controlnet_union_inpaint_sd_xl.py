@@ -370,7 +370,6 @@ class StableDiffusionXLControlNetUnionInpaintPipeline(
                     )
 
                 prompt_embeds = text_encoder(text_input_ids.to(device), output_hidden_states=True)
-
                 # We are only ALWAYS interested in the pooled output of the final text encoder
                 pooled_prompt_embeds = prompt_embeds[0]
                 if clip_skip is None:
@@ -1435,7 +1434,6 @@ class StableDiffusionXLControlNetUnionInpaintPipeline(
         text_encoder_lora_scale = (
             self.cross_attention_kwargs.get("scale", None) if self.cross_attention_kwargs is not None else None
         )
-
         (
             prompt_embeds,
             negative_prompt_embeds,
@@ -1607,7 +1605,7 @@ class StableDiffusionXLControlNetUnionInpaintPipeline(
             else:
                 controlnet_keep.append(keeps[0])
 
-        # 9. Prepare extra step kwargs. Logic should ideally just be moved out of the pipeline
+        # 9. Prepare extra step kwargs. TODO: Logic should ideally just be moved out of the pipeline
         height, width = latents.shape[-2:]
         height = height * self.vae_scale_factor
         width = width * self.vae_scale_factor

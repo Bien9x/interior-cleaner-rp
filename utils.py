@@ -125,6 +125,7 @@ def load_image(image_source: str, client = None) -> Image.Image:
 
     try:
         if image_source.startswith("http"):
+            print('Reading image from url')
             response = requests.get(image_source, timeout=10)  # Add timeout
             response.raise_for_status()  # Raise error for bad status codes
             return Image.open(BytesIO(response.content))

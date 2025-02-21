@@ -49,7 +49,7 @@ INPUT_SCHEMA = {
     'grow_mask_by': {
         'type': int,
         'required': False,
-        'default': 0.7,
+        'default': 33,
         'constraints': lambda grow_mask_by: grow_mask_by in range(1, 100)
     },
     'seed': {

@@ -23,6 +23,7 @@ class SDXLControlnetInpaint:
             "SG161222/RealVisXL_V5.0", controlnet=controlnet,
             vae=vae,
             torch_dtype=torch.float16,
+            variant='fp16'
         )
         self.pipe.scheduler = DPMSolverMultistepScheduler.from_config(self.pipe.scheduler.config)
         self.pipe=self.pipe.to(self.device)
