@@ -1,14 +1,12 @@
-import os
 import time
-from typing import List
 
 import torch
 from models.inpaint.lama import Lama
 from models.diffusion.sdxl import SDXLControlnetInpaint
 from models.upscale.upscaler import RealESRGAN
 from models.prompting.wd_tagger import TagGenerator
-from utils import load_image, convert_to_base64, resize_image
-from google.cloud import storage
+from utils import load_image, resize_image
+# from google.cloud import storage
 
 
 class Predictor:
@@ -20,7 +18,7 @@ class Predictor:
         self.diffusion_inpaint = SDXLControlnetInpaint()
         self.upscaler = RealESRGAN(scale=4, device=self.device)
         self.prompter = TagGenerator()
-        self.client = storage.Client()
+        # self.client = storage.Client()
         self.max_inference_resolution = 1024
 
     def setup(self):

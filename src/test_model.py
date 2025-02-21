@@ -1,9 +1,3 @@
-import os
-import time
-from typing import List
-
-import torch
-
 from models.inpaint.lama import Lama
 from models.diffusion.sdxl import SDXLControlnetInpaint
 from models.prompting.wd_tagger import TagGenerator

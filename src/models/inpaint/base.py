@@ -1,6 +1,6 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 import torch
-from typing import Optional, List
+from typing import Optional
 from PIL import Image
 from utils import boxes_from_mask, pad_img_to_modulo
 import numpy as np

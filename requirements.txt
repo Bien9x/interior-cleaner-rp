@@ -3,4 +3,4 @@ simple_lama_inpainting
 transformers
 diffusers
 timm
-google-cloud-storage
+#google-cloud-storage

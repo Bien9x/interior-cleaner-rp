@@ -1,7 +1,6 @@
 import runpod
-import time
 
-from runpod.serverless.utils import rp_download, rp_cleanup, rp_upload
+from runpod.serverless.utils import rp_cleanup, rp_upload
 from runpod.serverless.utils.rp_validator import validate
 import os
 from runner import Predictor
@@ -95,7 +94,7 @@ def handler(job):
 
     images = model.predict(
         image_path=valid_input['image_path'],
-        image_mask_path=valid_input['image_mask_path'],
+        mask_image_path=valid_input['mask_image_path'],
         num_images=valid_input['num_images'],
         num_steps=valid_input['num_steps'],
         guidance_scale=valid_input['guidance_scale'],
