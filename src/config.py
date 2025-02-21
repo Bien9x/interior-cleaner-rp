@@ -1,0 +1,1 @@
+PATH_SDXL_CONTROLNET_UNION = "checkpoints/controlnet-union-sdxl"
