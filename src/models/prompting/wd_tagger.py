@@ -13,6 +13,7 @@ from timm.data import create_transform, resolve_data_config
 from torch import Tensor, nn
 from torch.nn import functional as F
 from utils import pil_ensure_rgb, pil_pad_square
+from config import CACHE_DIR
 
 MODEL_REPO_MAP = {
     "vit": "SmilingWolf/wd-vit-tagger-v3",
@@ -35,7 +36,7 @@ def load_labels_hf(
 ) -> LabelData:
     try:
         csv_path = hf_hub_download(
-            repo_id=repo_id, filename="selected_tags.csv", revision=revision, token=token
+            repo_id=repo_id, filename="selected_tags.csv", revision=revision, token=token, cache_dir=CACHE_DIR
         )
         csv_path = Path(csv_path).resolve()
     except HfHubHTTPError as e:
@@ -99,9 +100,9 @@ class TagGenerator:
     def setup(self):
         repo_id = MODEL_REPO_MAP.get(self.model_id)
         print(f"Loading model '{self.model_id}' from '{repo_id}'...")
-        self.model: nn.Module = timm.create_model("hf-hub:" + repo_id).eval()
+        self.model: nn.Module = timm.create_model("hf-hub:" + repo_id,cache_dir=CACHE_DIR).eval()
         self.model = self.model.to(self.device)
-        state_dict = timm.models.load_state_dict_from_hf(repo_id)
+        state_dict = timm.models.load_state_dict_from_hf(repo_id,cache_dir=CACHE_DIR)
         self.model.load_state_dict(state_dict)
         print("Loading tag list...")
         self.labels: LabelData = load_labels_hf(repo_id=repo_id)
