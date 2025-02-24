@@ -4,7 +4,6 @@ import os
 import shutil
 import sys
 
-from accelerate.commands.config.config_args import cache_dir
 from huggingface_hub import hf_hub_download
 import timm
 from diffusers import AutoencoderKL
