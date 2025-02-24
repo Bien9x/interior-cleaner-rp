@@ -1,6 +1,6 @@
 torch
 simple_lama_inpainting
 transformers
-diffusers
+diffusers==0.32.1
 timm
 #google-cloud-storage
