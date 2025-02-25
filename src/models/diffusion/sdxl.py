@@ -10,23 +10,26 @@ from diffusers import DPMSolverMultistepScheduler
 from utils import pil_ensure_rgb
 import os
 
+
 class SDXLControlnetInpaint:
     def __init__(self):
         self.pipe = None
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
     def setup(self):
-        vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16)
+        vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16,
+                                            local_files_only=True)
         controlnet = ControlNetModel_Union.from_pretrained(config.PATH_SDXL_CONTROLNET_UNION,
                                                            torch_dtype=torch.float16, use_safetensors=True)
         self.pipe = StableDiffusionXLControlNetUnionInpaintPipeline.from_pretrained(
             "SG161222/RealVisXL_V5.0", controlnet=controlnet,
             vae=vae,
             torch_dtype=torch.float16,
-            variant='fp16'
+            variant='fp16',
+            local_files_only=True
         )
         self.pipe.scheduler = DPMSolverMultistepScheduler.from_config(self.pipe.scheduler.config)
-        self.pipe=self.pipe.to(self.device)
+        self.pipe = self.pipe.to(self.device)
 
     def __call__(self,
                  image: Image,
@@ -49,7 +52,7 @@ class SDXLControlnetInpaint:
         if grow_mask_by > 0:
             mask_data = np.asarray(mask)
             kernel = np.ones((grow_mask_by, grow_mask_by), np.uint8)
-            mask_data = cv2.dilate(mask_data,kernel)
+            mask_data = cv2.dilate(mask_data, kernel)
             mask = Image.fromarray(mask_data)
 
         width, height = image.size
