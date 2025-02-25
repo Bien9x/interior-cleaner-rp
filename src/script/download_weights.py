@@ -3,7 +3,7 @@ import os
 import shutil
 import sys
 
-from huggingface_hub import hf_hub_download
+#from huggingface_hub import hf_hub_download
 import timm
 from diffusers import AutoencoderKL
 import torch
@@ -22,7 +22,7 @@ download_url_to_file(LAMA_MODEL_URL,config.PATH_LAMA)
 # tagger model
 model = timm.create_model("hf-hub:" + config.MODEL_TAGGER_ID, cache_dir=config.CACHE_DIR)
 model_weights = timm.models.load_state_dict_from_hf(config.MODEL_TAGGER_ID, cache_dir=config.CACHE_DIR)
-csv_path = hf_hub_download(repo_id=config.MODEL_TAGGER_ID, filename="selected_tags.csv", cache_dir=config.CACHE_DIR)
+#csv_path = hf_hub_download(repo_id=config.MODEL_TAGGER_ID, filename="selected_tags.csv", cache_dir=config.CACHE_DIR)
 
 # diffusers
 download_url_to_file(config.URL_CONTROLNET_CONFIG,os.path.join(config.PATH_SDXL_CONTROLNET_UNION,'config.json'))
