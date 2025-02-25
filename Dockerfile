@@ -4,5 +4,5 @@ COPY requirements.txt /requirements.txt
 RUN pip install -r requirements.txt
 ADD src .
 # Start the container
-RUN python3 script/download_weights.py
-CMD ["python3", "-u", "rp_handler.py"]
+RUN python3.11 script/download_weights.py
+CMD ["python3.11", "-u", "rp_handler.py"]
