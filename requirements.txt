@@ -4,5 +4,6 @@ transformers
 diffusers==0.32.1
 accelerate
 huggingface_hub
+hf-transfer
 timm
 #google-cloud-storage
