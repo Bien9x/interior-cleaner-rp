@@ -28,12 +28,11 @@ csv_path = hf_hub_download(repo_id=config.MODEL_TAGGER_ID, filename="selected_ta
 download_url_to_file(config.URL_CONTROLNET_CONFIG,os.path.join(config.PATH_SDXL_CONTROLNET_UNION,'config.json'))
 download_url_to_file(config.URL_CONTROLNET_WEIGHT,os.path.join(config.PATH_SDXL_CONTROLNET_UNION,"diffusion_pytorch_model.safetensors"))
 vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16,
-                                    cache_dir=config.CACHE_DIR, local_files_only=True)
+                                    cache_dir=config.CACHE_DIR)
 pipe = StableDiffusionXLControlNetUnionInpaintPipeline.from_pretrained(
     "SG161222/RealVisXL_V5.0",
     vae=vae,
     torch_dtype=torch.float16,
     variant='fp16',
-    cache_dir=config.CACHE_DIR,
-    local_files_only=True
+    cache_dir=config.CACHE_DIR
 )
