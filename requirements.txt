@@ -1,3 +1,5 @@
+runpod
+pandas
 torch
 simple_lama_inpainting
 transformers
