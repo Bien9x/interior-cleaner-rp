@@ -28,7 +28,8 @@ from diffusers.models.attention_processor import (
     AttnAddedKVProcessor,
     AttnProcessor,
 )
-from diffusers.models.embeddings import TextImageProjection, TextImageTimeEmbedding, TextTimeEmbedding, TimestepEmbedding, Timesteps
+from diffusers.models.embeddings import TextImageProjection, TextImageTimeEmbedding, TextTimeEmbedding, \
+    TimestepEmbedding, Timesteps
 from diffusers.models.modeling_utils import ModelMixin
 from diffusers.models.unets.unet_2d_blocks import (
     CrossAttnDownBlock2D,
@@ -38,11 +39,10 @@ from diffusers.models.unets.unet_2d_blocks import (
 )
 from diffusers.models.unets.unet_2d_condition import UNet2DConditionModel
 
-
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
-
 from collections import OrderedDict
+
 
 # Transformer Block
 # Used to exchange info between different conditions and input image
@@ -52,6 +52,7 @@ class QuickGELU(nn.Module):
     def forward(self, x: torch.Tensor):
         return x * torch.sigmoid(1.702 * x)
 
+
 class LayerNorm(nn.LayerNorm):
     """Subclass torch's LayerNorm to handle fp16."""
 
@@ -59,7 +60,8 @@ class LayerNorm(nn.LayerNorm):
         orig_type = x.dtype
         ret = super().forward(x)
         return ret.type(orig_type)
-    
+
+
 class ResidualAttentionBlock(nn.Module):
 
     def __init__(self, d_model: int, n_head: int, attn_mask: torch.Tensor = None):
@@ -81,7 +83,9 @@ class ResidualAttentionBlock(nn.Module):
         x = x + self.attention(self.ln_1(x))
         x = x + self.mlp(self.ln_2(x))
         return x
-#-----------------------------------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------------------------------
 
 @dataclass
 class ControlNetOutput(BaseOutput):
@@ -115,10 +119,10 @@ class ControlNetConditioningEmbedding(nn.Module):
 
     # original setting is (16, 32, 96, 256)
     def __init__(
-        self,
-        conditioning_embedding_channels: int,
-        conditioning_channels: int = 3,
-        block_out_channels: Tuple[int] = (48, 96, 192, 384),
+            self,
+            conditioning_embedding_channels: int,
+            conditioning_channels: int = 3,
+            block_out_channels: Tuple[int] = (48, 96, 192, 384),
     ):
         super().__init__()
 
@@ -147,7 +151,7 @@ class ControlNetConditioningEmbedding(nn.Module):
         embedding = self.conv_out(embedding)
 
         return embedding
-    
+
 
 class ControlNetModel_Union(ModelMixin, ConfigMixin, FromOriginalModelMixin):
     """
@@ -219,44 +223,44 @@ class ControlNetModel_Union(ModelMixin, ConfigMixin, FromOriginalModelMixin):
 
     @register_to_config
     def __init__(
-        self,
-        in_channels: int = 4,
-        conditioning_channels: int = 3,
-        flip_sin_to_cos: bool = True,
-        freq_shift: int = 0,
-        down_block_types: Tuple[str] = (
-            "CrossAttnDownBlock2D",
-            "CrossAttnDownBlock2D",
-            "CrossAttnDownBlock2D",
-            "DownBlock2D",
-        ),
-        only_cross_attention: Union[bool, Tuple[bool]] = False,
-        block_out_channels: Tuple[int] = (320, 640, 1280, 1280),
-        layers_per_block: int = 2,
-        downsample_padding: int = 1,
-        mid_block_scale_factor: float = 1,
-        act_fn: str = "silu",
-        norm_num_groups: Optional[int] = 32,
-        norm_eps: float = 1e-5,
-        cross_attention_dim: int = 1280,
-        transformer_layers_per_block: Union[int, Tuple[int]] = 1,
-        encoder_hid_dim: Optional[int] = None,
-        encoder_hid_dim_type: Optional[str] = None,
-        attention_head_dim: Union[int, Tuple[int]] = 8,
-        num_attention_heads: Optional[Union[int, Tuple[int]]] = None,
-        use_linear_projection: bool = False,
-        class_embed_type: Optional[str] = None,
-        addition_embed_type: Optional[str] = None,
-        addition_time_embed_dim: Optional[int] = None,
-        num_class_embeds: Optional[int] = None,
-        upcast_attention: bool = False,
-        resnet_time_scale_shift: str = "default",
-        projection_class_embeddings_input_dim: Optional[int] = None,
-        controlnet_conditioning_channel_order: str = "rgb",
-        conditioning_embedding_out_channels: Optional[Tuple[int]] = (16, 32, 96, 256),
-        global_pool_conditions: bool = False,
-        addition_embed_type_num_heads=64,
-        num_control_type = 6,
+            self,
+            in_channels: int = 4,
+            conditioning_channels: int = 3,
+            flip_sin_to_cos: bool = True,
+            freq_shift: int = 0,
+            down_block_types: Tuple[str] = (
+                    "CrossAttnDownBlock2D",
+                    "CrossAttnDownBlock2D",
+                    "CrossAttnDownBlock2D",
+                    "DownBlock2D",
+            ),
+            only_cross_attention: Union[bool, Tuple[bool]] = False,
+            block_out_channels: Tuple[int] = (320, 640, 1280, 1280),
+            layers_per_block: int = 2,
+            downsample_padding: int = 1,
+            mid_block_scale_factor: float = 1,
+            act_fn: str = "silu",
+            norm_num_groups: Optional[int] = 32,
+            norm_eps: float = 1e-5,
+            cross_attention_dim: int = 1280,
+            transformer_layers_per_block: Union[int, Tuple[int]] = 1,
+            encoder_hid_dim: Optional[int] = None,
+            encoder_hid_dim_type: Optional[str] = None,
+            attention_head_dim: Union[int, Tuple[int]] = 8,
+            num_attention_heads: Optional[Union[int, Tuple[int]]] = None,
+            use_linear_projection: bool = False,
+            class_embed_type: Optional[str] = None,
+            addition_embed_type: Optional[str] = None,
+            addition_time_embed_dim: Optional[int] = None,
+            num_class_embeds: Optional[int] = None,
+            upcast_attention: bool = False,
+            resnet_time_scale_shift: str = "default",
+            projection_class_embeddings_input_dim: Optional[int] = None,
+            controlnet_conditioning_channel_order: str = "rgb",
+            conditioning_embedding_out_channels: Optional[Tuple[int]] = (16, 32, 96, 256),
+            global_pool_conditions: bool = False,
+            addition_embed_type_num_heads=64,
+            num_control_type=6,
     ):
         super().__init__()
 
@@ -387,7 +391,7 @@ class ControlNetModel_Union(ModelMixin, ConfigMixin, FromOriginalModelMixin):
         )
 
         # Copyright by Qi Xin(2024/07/06)
-        # Condition Transformer(fuse single/multi conditions with input image) 
+        # Condition Transformer(fuse single/multi conditions with input image)
         # The Condition Transformer augment the feature representation of conditions
         # The overall design is somewhat like resnet. The output of Condition Transformer is used to predict a condition bias adding to the original condition feature.
         # num_control_type = 6
@@ -396,18 +400,19 @@ class ControlNetModel_Union(ModelMixin, ConfigMixin, FromOriginalModelMixin):
         num_trans_layer = 1
         num_proj_channel = 320
         task_scale_factor = num_trans_channel ** 0.5
-        
+
         self.task_embedding = nn.Parameter(task_scale_factor * torch.randn(num_control_type, num_trans_channel))
-        self.transformer_layes = nn.Sequential(*[ResidualAttentionBlock(num_trans_channel, num_trans_head) for _ in range(num_trans_layer)])
+        self.transformer_layes = nn.Sequential(
+            *[ResidualAttentionBlock(num_trans_channel, num_trans_head) for _ in range(num_trans_layer)])
         self.spatial_ch_projs = zero_module(nn.Linear(num_trans_channel, num_proj_channel))
-        #-----------------------------------------------------------------------------------------------------
+        # -----------------------------------------------------------------------------------------------------
 
         # Copyright by Qi Xin(2024/07/06)
         # Control Encoder to distinguish different control conditions
         # A simple but effective module, consists of an embedding layer and a linear layer, to inject the control info to time embedding.
         self.control_type_proj = Timesteps(addition_time_embed_dim, flip_sin_to_cos, freq_shift)
         self.control_add_embedding = TimestepEmbedding(addition_time_embed_dim * num_control_type, time_embed_dim)
-        #-----------------------------------------------------------------------------------------------------
+        # -----------------------------------------------------------------------------------------------------
 
         self.down_blocks = nn.ModuleList([])
         self.controlnet_down_blocks = nn.ModuleList([])
@@ -489,11 +494,11 @@ class ControlNetModel_Union(ModelMixin, ConfigMixin, FromOriginalModelMixin):
 
     @classmethod
     def from_unet(
-        cls,
-        unet: UNet2DConditionModel,
-        controlnet_conditioning_channel_order: str = "rgb",
-        conditioning_embedding_out_channels: Optional[Tuple[int]] = (16, 32, 96, 256),
-        load_weights_from_unet: bool = True,
+            cls,
+            unet: UNet2DConditionModel,
+            controlnet_conditioning_channel_order: str = "rgb",
+            conditioning_embedding_out_channels: Optional[Tuple[int]] = (16, 32, 96, 256),
+            load_weights_from_unet: bool = True,
     ):
         r"""
         Instantiate a [`ControlNetModel`] from [`UNet2DConditionModel`].
@@ -585,7 +590,7 @@ class ControlNetModel_Union(ModelMixin, ConfigMixin, FromOriginalModelMixin):
 
     # Copied from diffusers.models.unet_2d_condition.UNet2DConditionModel.set_attn_processor
     def set_attn_processor(
-        self, processor: Union[AttentionProcessor, Dict[str, AttentionProcessor]], _remove_lora=False
+            self, processor: Union[AttentionProcessor, Dict[str, AttentionProcessor]], _remove_lora=False
     ):
         r"""
         Sets the attention processor to use to compute attention.
@@ -702,26 +707,24 @@ class ControlNetModel_Union(ModelMixin, ConfigMixin, FromOriginalModelMixin):
         for module in self.children():
             fn_recursive_set_attention_slice(module, reversed_slice_size)
 
-
     def _set_gradient_checkpointing(self, module, value=False):
         if isinstance(module, (CrossAttnDownBlock2D, DownBlock2D)):
             module.gradient_checkpointing = value
 
-
     def forward(
-        self,
-        sample: torch.FloatTensor,
-        timestep: Union[torch.Tensor, float, int],
-        encoder_hidden_states: torch.Tensor,
-        controlnet_cond_list: torch.FloatTensor,
-        conditioning_scale: float = 1.0,
-        class_labels: Optional[torch.Tensor] = None,
-        timestep_cond: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        added_cond_kwargs: Optional[Dict[str, torch.Tensor]] = None,
-        cross_attention_kwargs: Optional[Dict[str, Any]] = None,
-        guess_mode: bool = False,
-        return_dict: bool = True,
+            self,
+            sample: torch.FloatTensor,
+            timestep: Union[torch.Tensor, float, int],
+            encoder_hidden_states: torch.Tensor,
+            controlnet_cond_list: torch.FloatTensor,
+            conditioning_scale: float = 1.0,
+            class_labels: Optional[torch.Tensor] = None,
+            timestep_cond: Optional[torch.Tensor] = None,
+            attention_mask: Optional[torch.Tensor] = None,
+            added_cond_kwargs: Optional[Dict[str, torch.Tensor]] = None,
+            cross_attention_kwargs: Optional[Dict[str, Any]] = None,
+            guess_mode: bool = False,
+            return_dict: bool = True,
     ) -> Union[ControlNetOutput, Tuple]:
         """
         The [`ControlNetModel`] forward method.
@@ -781,7 +784,7 @@ class ControlNetModel_Union(ModelMixin, ConfigMixin, FromOriginalModelMixin):
         # 1. time
         timesteps = timestep
         if not torch.is_tensor(timesteps):
-            # TO-DO: this requires sync between CPU and GPU. So try to pass timesteps as tensors if you can
+            # TODO: this requires sync between CPU and GPU. So try to pass timesteps as tensors if you can
             # This would be a good case for the `match` statement (Python 3.10+)
             is_mps = sample.device.type == "mps"
             if isinstance(timestep, float):
@@ -845,7 +848,7 @@ class ControlNetModel_Union(ModelMixin, ConfigMixin, FromOriginalModelMixin):
         control_embeds = control_embeds.to(emb.dtype)
         control_emb = self.control_add_embedding(control_embeds)
         emb = emb + control_emb
-        #---------------------------------------------------------------------------------
+        # ---------------------------------------------------------------------------------
 
         emb = emb + aug_emb if aug_emb is not None else emb
 
@@ -862,10 +865,10 @@ class ControlNetModel_Union(ModelMixin, ConfigMixin, FromOriginalModelMixin):
         for idx in range(indices.shape[0] + 1):
             if idx == indices.shape[0]:
                 controlnet_cond = sample
-                feat_seq = torch.mean(controlnet_cond, dim=(2, 3)) # N * C
+                feat_seq = torch.mean(controlnet_cond, dim=(2, 3))  # N * C
             else:
                 controlnet_cond = self.controlnet_cond_embedding(controlnet_cond_list[indices[idx][0]])
-                feat_seq = torch.mean(controlnet_cond, dim=(2, 3)) # N * C
+                feat_seq = torch.mean(controlnet_cond, dim=(2, 3))  # N * C
                 feat_seq = feat_seq + self.task_embedding[indices[idx][0]]
 
             inputs.append(feat_seq.unsqueeze(1))
@@ -879,9 +882,9 @@ class ControlNetModel_Union(ModelMixin, ConfigMixin, FromOriginalModelMixin):
             alpha = self.spatial_ch_projs(x[:, idx])
             alpha = alpha.unsqueeze(-1).unsqueeze(-1)
             controlnet_cond_fuser += condition_list[idx] + alpha
-        
+
         sample = sample + controlnet_cond_fuser
-        #-------------------------------------------------------------------------------------------
+        # -------------------------------------------------------------------------------------------
 
         # 3. down
         down_block_res_samples = (sample,)
@@ -945,12 +948,10 @@ class ControlNetModel_Union(ModelMixin, ConfigMixin, FromOriginalModelMixin):
         )
 
 
-
 def zero_module(module):
     for p in module.parameters():
         nn.init.zeros_(p)
     return module
-
 
 
 

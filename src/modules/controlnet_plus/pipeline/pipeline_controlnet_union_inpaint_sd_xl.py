@@ -58,17 +58,15 @@ from diffusers.pipelines.pipeline_utils import DiffusionPipeline, StableDiffusio
 from diffusers.pipelines.stable_diffusion_xl.pipeline_output import StableDiffusionXLPipelineOutput
 from diffusers.pipelines.controlnet.multicontrolnet import MultiControlNetModel
 
-
 if is_invisible_watermark_available():
     from diffusers.pipelines.stable_diffusion_xl.watermark import StableDiffusionXLWatermarker
-
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
 
 # Copied from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img.retrieve_latents
 def retrieve_latents(
-    encoder_output: torch.Tensor, generator: Optional[torch.Generator] = None, sample_mode: str = "sample"
+        encoder_output: torch.Tensor, generator: Optional[torch.Generator] = None, sample_mode: str = "sample"
 ):
     if hasattr(encoder_output, "latent_dist") and sample_mode == "sample":
         return encoder_output.latent_dist.sample(generator)
@@ -196,20 +194,20 @@ class StableDiffusionXLControlNetUnionInpaintPipeline(
     _callback_tensor_inputs = ["latents", "prompt_embeds", "negative_prompt_embeds"]
 
     def __init__(
-        self,
-        vae: AutoencoderKL,
-        text_encoder: CLIPTextModel,
-        text_encoder_2: CLIPTextModelWithProjection,
-        tokenizer: CLIPTokenizer,
-        tokenizer_2: CLIPTokenizer,
-        unet: UNet2DConditionModel,
-        controlnet: ControlNetModel,
-        scheduler: KarrasDiffusionSchedulers,
-        requires_aesthetics_score: bool = False,
-        force_zeros_for_empty_prompt: bool = True,
-        add_watermarker: Optional[bool] = None,
-        feature_extractor: Optional[CLIPImageProcessor] = None,
-        image_encoder: Optional[CLIPVisionModelWithProjection] = None,
+            self,
+            vae: AutoencoderKL,
+            text_encoder: CLIPTextModel,
+            text_encoder_2: CLIPTextModelWithProjection,
+            tokenizer: CLIPTokenizer,
+            tokenizer_2: CLIPTokenizer,
+            unet: UNet2DConditionModel,
+            controlnet: ControlNetModel,
+            scheduler: KarrasDiffusionSchedulers,
+            requires_aesthetics_score: bool = False,
+            force_zeros_for_empty_prompt: bool = True,
+            add_watermarker: Optional[bool] = None,
+            feature_extractor: Optional[CLIPImageProcessor] = None,
+            image_encoder: Optional[CLIPVisionModelWithProjection] = None,
     ):
         super().__init__()
 
@@ -248,20 +246,20 @@ class StableDiffusionXLControlNetUnionInpaintPipeline(
 
     # Copied from diffusers.pipelines.stable_diffusion_xl.pipeline_stable_diffusion_xl.StableDiffusionXLPipeline.encode_prompt
     def encode_prompt(
-        self,
-        prompt: str,
-        prompt_2: Optional[str] = None,
-        device: Optional[torch.device] = None,
-        num_images_per_prompt: int = 1,
-        do_classifier_free_guidance: bool = True,
-        negative_prompt: Optional[str] = None,
-        negative_prompt_2: Optional[str] = None,
-        prompt_embeds: Optional[torch.FloatTensor] = None,
-        negative_prompt_embeds: Optional[torch.FloatTensor] = None,
-        pooled_prompt_embeds: Optional[torch.FloatTensor] = None,
-        negative_pooled_prompt_embeds: Optional[torch.FloatTensor] = None,
-        lora_scale: Optional[float] = None,
-        clip_skip: Optional[int] = None,
+            self,
+            prompt: str,
+            prompt_2: Optional[str] = None,
+            device: Optional[torch.device] = None,
+            num_images_per_prompt: int = 1,
+            do_classifier_free_guidance: bool = True,
+            negative_prompt: Optional[str] = None,
+            negative_prompt_2: Optional[str] = None,
+            prompt_embeds: Optional[torch.FloatTensor] = None,
+            negative_prompt_embeds: Optional[torch.FloatTensor] = None,
+            pooled_prompt_embeds: Optional[torch.FloatTensor] = None,
+            negative_pooled_prompt_embeds: Optional[torch.FloatTensor] = None,
+            lora_scale: Optional[float] = None,
+            clip_skip: Optional[int] = None,
     ):
         r"""
         Encodes the prompt into text encoder hidden states.
@@ -361,15 +359,16 @@ class StableDiffusionXLControlNetUnionInpaintPipeline(
                 untruncated_ids = tokenizer(prompt, padding="longest", return_tensors="pt").input_ids
 
                 if untruncated_ids.shape[-1] >= text_input_ids.shape[-1] and not torch.equal(
-                    text_input_ids, untruncated_ids
+                        text_input_ids, untruncated_ids
                 ):
-                    removed_text = tokenizer.batch_decode(untruncated_ids[:, tokenizer.model_max_length - 1 : -1])
+                    removed_text = tokenizer.batch_decode(untruncated_ids[:, tokenizer.model_max_length - 1: -1])
                     logger.warning(
                         "The following part of your input was truncated because CLIP can only handle sequences up to"
                         f" {tokenizer.model_max_length} tokens: {removed_text}"
                     )
 
                 prompt_embeds = text_encoder(text_input_ids.to(device), output_hidden_states=True)
+
                 # We are only ALWAYS interested in the pooled output of the final text encoder
                 pooled_prompt_embeds = prompt_embeds[0]
                 if clip_skip is None:
@@ -507,7 +506,7 @@ class StableDiffusionXLControlNetUnionInpaintPipeline(
 
     # Copied from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion.StableDiffusionPipeline.prepare_ip_adapter_image_embeds
     def prepare_ip_adapter_image_embeds(
-        self, ip_adapter_image, ip_adapter_image_embeds, device, num_images_per_prompt, do_classifier_free_guidance
+            self, ip_adapter_image, ip_adapter_image_embeds, device, num_images_per_prompt, do_classifier_free_guidance
     ):
         if ip_adapter_image_embeds is None:
             if not isinstance(ip_adapter_image, list):
@@ -520,7 +519,7 @@ class StableDiffusionXLControlNetUnionInpaintPipeline(
 
             image_embeds = []
             for single_ip_adapter_image, image_proj_layer in zip(
-                ip_adapter_image, self.unet.encoder_hid_proj.image_projection_layers
+                    ip_adapter_image, self.unet.encoder_hid_proj.image_projection_layers
             ):
                 output_hidden_state = not isinstance(image_proj_layer, ImageProjection)
                 single_image_embeds, single_negative_image_embeds = self.encode_image(
@@ -584,12 +583,12 @@ class StableDiffusionXLControlNetUnionInpaintPipeline(
         image_is_np_list = isinstance(image, list) and isinstance(image[0], np.ndarray)
 
         if (
-            not image_is_pil
-            and not image_is_tensor
-            and not image_is_np
-            and not image_is_pil_list
-            and not image_is_tensor_list
-            and not image_is_np_list
+                not image_is_pil
+                and not image_is_tensor
+                and not image_is_np
+                and not image_is_pil_list
+                and not image_is_tensor_list
+                and not image_is_np_list
         ):
             raise TypeError(
                 f"image must be passed and be one of PIL image, numpy array, torch tensor, list of PIL images, list of numpy arrays or list of torch tensors, but is {type(image)}"
@@ -613,28 +612,28 @@ class StableDiffusionXLControlNetUnionInpaintPipeline(
             )
 
     def check_inputs(
-        self,
-        prompt,
-        prompt_2,
-        image,
-        mask_image,
-        strength,
-        num_inference_steps,
-        callback_steps,
-        output_type,
-        negative_prompt=None,
-        negative_prompt_2=None,
-        prompt_embeds=None,
-        negative_prompt_embeds=None,
-        ip_adapter_image=None,
-        ip_adapter_image_embeds=None,
-        pooled_prompt_embeds=None,
-        negative_pooled_prompt_embeds=None,
-        controlnet_conditioning_scale=1.0,
-        control_guidance_start=0.0,
-        control_guidance_end=1.0,
-        callback_on_step_end_tensor_inputs=None,
-        padding_mask_crop=None,
+            self,
+            prompt,
+            prompt_2,
+            image,
+            mask_image,
+            strength,
+            num_inference_steps,
+            callback_steps,
+            output_type,
+            negative_prompt=None,
+            negative_prompt_2=None,
+            prompt_embeds=None,
+            negative_prompt_embeds=None,
+            ip_adapter_image=None,
+            ip_adapter_image_embeds=None,
+            pooled_prompt_embeds=None,
+            negative_pooled_prompt_embeds=None,
+            controlnet_conditioning_scale=1.0,
+            control_guidance_start=0.0,
+            control_guidance_end=1.0,
+            callback_on_step_end_tensor_inputs=None,
+            padding_mask_crop=None,
     ):
         if strength < 0 or strength > 1:
             raise ValueError(f"The value of strength should in [0.0, 1.0] but is {strength}")
@@ -653,7 +652,7 @@ class StableDiffusionXLControlNetUnionInpaintPipeline(
             )
 
         if callback_on_step_end_tensor_inputs is not None and not all(
-            k in self._callback_tensor_inputs for k in callback_on_step_end_tensor_inputs
+                k in self._callback_tensor_inputs for k in callback_on_step_end_tensor_inputs
         ):
             raise ValueError(
                 f"`callback_on_step_end_tensor_inputs` has to be in {self._callback_tensor_inputs}, but found {[k for k in callback_on_step_end_tensor_inputs if k not in self._callback_tensor_inputs]}"
@@ -734,21 +733,21 @@ class StableDiffusionXLControlNetUnionInpaintPipeline(
             self.controlnet, torch._dynamo.eval_frame.OptimizedModule
         )
         if (
-            isinstance(self.controlnet, ControlNetModel)
-            or is_compiled
-            and isinstance(self.controlnet._orig_mod, ControlNetModel)
+                isinstance(self.controlnet, ControlNetModel)
+                or is_compiled
+                and isinstance(self.controlnet._orig_mod, ControlNetModel)
         ):
             self.check_image(image, prompt, prompt_embeds)
         elif (
-            isinstance(self.controlnet, ControlNetModel_Union)
-            or is_compiled
-            and isinstance(self.controlnet._orig_mod, ControlNetModel_Union)
+                isinstance(self.controlnet, ControlNetModel_Union)
+                or is_compiled
+                and isinstance(self.controlnet._orig_mod, ControlNetModel_Union)
         ):
             self.check_image(image, prompt, prompt_embeds)
         elif (
-            isinstance(self.controlnet, MultiControlNetModel)
-            or is_compiled
-            and isinstance(self.controlnet._orig_mod, MultiControlNetModel)
+                isinstance(self.controlnet, MultiControlNetModel)
+                or is_compiled
+                and isinstance(self.controlnet._orig_mod, MultiControlNetModel)
         ):
             if not isinstance(image, list):
                 raise TypeError("For multiple controlnets: `image` must be type `list`")
@@ -769,31 +768,31 @@ class StableDiffusionXLControlNetUnionInpaintPipeline(
 
         # Check `controlnet_conditioning_scale`
         if (
-            isinstance(self.controlnet, ControlNetModel)
-            or is_compiled
-            and isinstance(self.controlnet._orig_mod, ControlNetModel)
+                isinstance(self.controlnet, ControlNetModel)
+                or is_compiled
+                and isinstance(self.controlnet._orig_mod, ControlNetModel)
         ):
             if not isinstance(controlnet_conditioning_scale, float):
                 raise TypeError("For single controlnet: `controlnet_conditioning_scale` must be type `float`.")
-        
+
         elif (
-            isinstance(self.controlnet, ControlNetModel_Union)
-            or is_compiled
-            and isinstance(self.controlnet._orig_mod, ControlNetModel_Union)
+                isinstance(self.controlnet, ControlNetModel_Union)
+                or is_compiled
+                and isinstance(self.controlnet._orig_mod, ControlNetModel_Union)
         ):
             if not isinstance(controlnet_conditioning_scale, float):
                 raise TypeError("For single controlnet: `controlnet_conditioning_scale` must be type `float`.")
-        
+
         elif (
-            isinstance(self.controlnet, MultiControlNetModel)
-            or is_compiled
-            and isinstance(self.controlnet._orig_mod, MultiControlNetModel)
+                isinstance(self.controlnet, MultiControlNetModel)
+                or is_compiled
+                and isinstance(self.controlnet._orig_mod, MultiControlNetModel)
         ):
             if isinstance(controlnet_conditioning_scale, list):
                 if any(isinstance(i, list) for i in controlnet_conditioning_scale):
                     raise ValueError("A single batch of multiple conditionings are supported at the moment.")
             elif isinstance(controlnet_conditioning_scale, list) and len(controlnet_conditioning_scale) != len(
-                self.controlnet.nets
+                    self.controlnet.nets
             ):
                 raise ValueError(
                     "For multiple controlnets: When `controlnet_conditioning_scale` is specified as `list`, it must have"
@@ -845,18 +844,18 @@ class StableDiffusionXLControlNetUnionInpaintPipeline(
                 )
 
     def prepare_control_image(
-        self,
-        image,
-        width,
-        height,
-        batch_size,
-        num_images_per_prompt,
-        device,
-        dtype,
-        crops_coords,
-        resize_mode,
-        do_classifier_free_guidance=False,
-        guess_mode=False,
+            self,
+            image,
+            width,
+            height,
+            batch_size,
+            num_images_per_prompt,
+            device,
+            dtype,
+            crops_coords,
+            resize_mode,
+            do_classifier_free_guidance=False,
+            guess_mode=False,
     ):
         image = self.control_image_processor.preprocess(
             image, height=height, width=width, crops_coords=crops_coords, resize_mode=resize_mode
@@ -879,21 +878,21 @@ class StableDiffusionXLControlNetUnionInpaintPipeline(
         return image
 
     def prepare_latents(
-        self,
-        batch_size,
-        num_channels_latents,
-        height,
-        width,
-        dtype,
-        device,
-        generator,
-        latents=None,
-        image=None,
-        timestep=None,
-        is_strength_max=True,
-        add_noise=True,
-        return_noise=False,
-        return_image_latents=False,
+            self,
+            batch_size,
+            num_channels_latents,
+            height,
+            width,
+            dtype,
+            device,
+            generator,
+            latents=None,
+            image=None,
+            timestep=None,
+            is_strength_max=True,
+            add_noise=True,
+            return_noise=False,
+            return_image_latents=False,
     ):
         shape = (batch_size, num_channels_latents, height // self.vae_scale_factor, width // self.vae_scale_factor)
         if isinstance(generator, list) and len(generator) != batch_size:
@@ -948,7 +947,7 @@ class StableDiffusionXLControlNetUnionInpaintPipeline(
 
         if isinstance(generator, list):
             image_latents = [
-                retrieve_latents(self.vae.encode(image[i : i + 1]), generator=generator[i])
+                retrieve_latents(self.vae.encode(image[i: i + 1]), generator=generator[i])
                 for i in range(image.shape[0])
             ]
             image_latents = torch.cat(image_latents, dim=0)
@@ -964,7 +963,7 @@ class StableDiffusionXLControlNetUnionInpaintPipeline(
         return image_latents
 
     def prepare_mask_latents(
-        self, mask, masked_image, batch_size, height, width, dtype, device, generator, do_classifier_free_guidance
+            self, mask, masked_image, batch_size, height, width, dtype, device, generator, do_classifier_free_guidance
     ):
         # resize the mask to latents shape as we concatenate the mask to the latents
         # we do that before converting to dtype to avoid breaking in case we're using cpu_offload
@@ -1019,7 +1018,7 @@ class StableDiffusionXLControlNetUnionInpaintPipeline(
         else:
             t_start = 0
 
-        timesteps = self.scheduler.timesteps[t_start * self.scheduler.order :]
+        timesteps = self.scheduler.timesteps[t_start * self.scheduler.order:]
 
         # Strength is irrelevant if we directly request a timestep to start at;
         # that is, strength is determined by the denoising_start instead.
@@ -1048,14 +1047,14 @@ class StableDiffusionXLControlNetUnionInpaintPipeline(
         return timesteps, num_inference_steps - t_start
 
     def _get_add_time_ids(
-        self,
-        original_size,
-        crops_coords_top_left,
-        target_size,
-        aesthetic_score,
-        negative_aesthetic_score,
-        dtype,
-        text_encoder_projection_dim=None,
+            self,
+            original_size,
+            crops_coords_top_left,
+            target_size,
+            aesthetic_score,
+            negative_aesthetic_score,
+            dtype,
+            text_encoder_projection_dim=None,
     ):
         if self.config.requires_aesthetics_score:
             add_time_ids = list(original_size + crops_coords_top_left + (aesthetic_score,))
@@ -1065,20 +1064,20 @@ class StableDiffusionXLControlNetUnionInpaintPipeline(
             add_neg_time_ids = list(original_size + crops_coords_top_left + target_size)
 
         passed_add_embed_dim = (
-            self.unet.config.addition_time_embed_dim * len(add_time_ids) + text_encoder_projection_dim
+                self.unet.config.addition_time_embed_dim * len(add_time_ids) + text_encoder_projection_dim
         )
         expected_add_embed_dim = self.unet.add_embedding.linear_1.in_features
 
         if (
-            expected_add_embed_dim > passed_add_embed_dim
-            and (expected_add_embed_dim - passed_add_embed_dim) == self.unet.config.addition_time_embed_dim
+                expected_add_embed_dim > passed_add_embed_dim
+                and (expected_add_embed_dim - passed_add_embed_dim) == self.unet.config.addition_time_embed_dim
         ):
             raise ValueError(
                 f"Model expects an added time embedding vector of length {expected_add_embed_dim}, but a vector of {passed_add_embed_dim} was created. Please make sure to enable `requires_aesthetics_score` with `pipe.register_to_config(requires_aesthetics_score=True)` to make sure `aesthetic_score` {aesthetic_score} and `negative_aesthetic_score` {negative_aesthetic_score} is correctly used by the model."
             )
         elif (
-            expected_add_embed_dim < passed_add_embed_dim
-            and (passed_add_embed_dim - expected_add_embed_dim) == self.unet.config.addition_time_embed_dim
+                expected_add_embed_dim < passed_add_embed_dim
+                and (passed_add_embed_dim - expected_add_embed_dim) == self.unet.config.addition_time_embed_dim
         ):
             raise ValueError(
                 f"Model expects an added time embedding vector of length {expected_add_embed_dim}, but a vector of {passed_add_embed_dim} was created. Please make sure to disable `requires_aesthetics_score` with `pipe.register_to_config(requires_aesthetics_score=False)` to make sure `target_size` {target_size} is correctly used by the model."
@@ -1139,54 +1138,54 @@ class StableDiffusionXLControlNetUnionInpaintPipeline(
     @torch.no_grad()
     @replace_example_docstring(EXAMPLE_DOC_STRING)
     def __call__(
-        self,
-        prompt: Union[str, List[str]] = None,
-        prompt_2: Optional[Union[str, List[str]]] = None,
-        image: PipelineImageInput = None,
-        mask_image: PipelineImageInput = None,
-        control_image_list: Union[
-            PipelineImageInput,
-            List[PipelineImageInput],
-        ] = None,
-        height: Optional[int] = None,
-        width: Optional[int] = None,
-        padding_mask_crop: Optional[int] = None,
-        strength: float = 0.9999,
-        num_inference_steps: int = 50,
-        denoising_start: Optional[float] = None,
-        denoising_end: Optional[float] = None,
-        guidance_scale: float = 5.0,
-        negative_prompt: Optional[Union[str, List[str]]] = None,
-        negative_prompt_2: Optional[Union[str, List[str]]] = None,
-        num_images_per_prompt: Optional[int] = 1,
-        eta: float = 0.0,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.FloatTensor] = None,
-        prompt_embeds: Optional[torch.FloatTensor] = None,
-        negative_prompt_embeds: Optional[torch.FloatTensor] = None,
-        ip_adapter_image: Optional[PipelineImageInput] = None,
-        ip_adapter_image_embeds: Optional[List[torch.FloatTensor]] = None,
-        pooled_prompt_embeds: Optional[torch.FloatTensor] = None,
-        negative_pooled_prompt_embeds: Optional[torch.FloatTensor] = None,
-        output_type: Optional[str] = "pil",
-        return_dict: bool = True,
-        cross_attention_kwargs: Optional[Dict[str, Any]] = None,
-        controlnet_conditioning_scale: Union[float, List[float]] = 1.0,
-        guess_mode: bool = False,
-        control_guidance_start: Union[float, List[float]] = 0.0,
-        control_guidance_end: Union[float, List[float]] = 1.0,
-        guidance_rescale: float = 0.0,
-        original_size: Tuple[int, int] = None,
-        crops_coords_top_left: Tuple[int, int] = (0, 0),
-        target_size: Tuple[int, int] = None,
-        aesthetic_score: float = 6.0,
-        negative_aesthetic_score: float = 2.5,
-        clip_skip: Optional[int] = None,
-        callback_on_step_end: Optional[Callable[[int, int, Dict], None]] = None,
-        callback_on_step_end_tensor_inputs: List[str] = ["latents"],
-        union_control = False,
-        union_control_type = None,
-        **kwargs,
+            self,
+            prompt: Union[str, List[str]] = None,
+            prompt_2: Optional[Union[str, List[str]]] = None,
+            image: PipelineImageInput = None,
+            mask_image: PipelineImageInput = None,
+            control_image_list: Union[
+                PipelineImageInput,
+                List[PipelineImageInput],
+            ] = None,
+            height: Optional[int] = None,
+            width: Optional[int] = None,
+            padding_mask_crop: Optional[int] = None,
+            strength: float = 0.9999,
+            num_inference_steps: int = 50,
+            denoising_start: Optional[float] = None,
+            denoising_end: Optional[float] = None,
+            guidance_scale: float = 5.0,
+            negative_prompt: Optional[Union[str, List[str]]] = None,
+            negative_prompt_2: Optional[Union[str, List[str]]] = None,
+            num_images_per_prompt: Optional[int] = 1,
+            eta: float = 0.0,
+            generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
+            latents: Optional[torch.FloatTensor] = None,
+            prompt_embeds: Optional[torch.FloatTensor] = None,
+            negative_prompt_embeds: Optional[torch.FloatTensor] = None,
+            ip_adapter_image: Optional[PipelineImageInput] = None,
+            ip_adapter_image_embeds: Optional[List[torch.FloatTensor]] = None,
+            pooled_prompt_embeds: Optional[torch.FloatTensor] = None,
+            negative_pooled_prompt_embeds: Optional[torch.FloatTensor] = None,
+            output_type: Optional[str] = "pil",
+            return_dict: bool = True,
+            cross_attention_kwargs: Optional[Dict[str, Any]] = None,
+            controlnet_conditioning_scale: Union[float, List[float]] = 1.0,
+            guess_mode: bool = False,
+            control_guidance_start: Union[float, List[float]] = 0.0,
+            control_guidance_end: Union[float, List[float]] = 1.0,
+            guidance_rescale: float = 0.0,
+            original_size: Tuple[int, int] = None,
+            crops_coords_top_left: Tuple[int, int] = (0, 0),
+            target_size: Tuple[int, int] = None,
+            aesthetic_score: float = 6.0,
+            negative_aesthetic_score: float = 2.5,
+            clip_skip: Optional[int] = None,
+            callback_on_step_end: Optional[Callable[[int, int, Dict], None]] = None,
+            callback_on_step_end_tensor_inputs: List[str] = ["latents"],
+            union_control=False,
+            union_control_type=None,
+            **kwargs,
     ):
         r"""
         Function invoked when calling the pipeline for generation.
@@ -1434,6 +1433,7 @@ class StableDiffusionXLControlNetUnionInpaintPipeline(
         text_encoder_lora_scale = (
             self.cross_attention_kwargs.get("scale", None) if self.cross_attention_kwargs is not None else None
         )
+
         (
             prompt_embeds,
             negative_prompt_embeds,
@@ -1523,7 +1523,6 @@ class StableDiffusionXLControlNetUnionInpaintPipeline(
                 height, width = control_image.shape[-2:]
                 control_image_list[idx] = control_image
 
-
         # 5.3 Prepare mask
         mask = self.mask_processor.preprocess(
             mask_image, height=height, width=width, resize_mode=resize_mode, crops_coords=crops_coords
@@ -1583,7 +1582,7 @@ class StableDiffusionXLControlNetUnionInpaintPipeline(
                     f"Incorrect configuration settings! The config of `pipeline.unet`: {self.unet.config} expects"
                     f" {self.unet.config.in_channels} but received `num_channels_latents`: {num_channels_latents} +"
                     f" `num_channels_mask`: {num_channels_mask} + `num_channels_masked_image`: {num_channels_masked_image}"
-                    f" = {num_channels_latents+num_channels_masked_image+num_channels_mask}. Please verify the config of"
+                    f" = {num_channels_latents + num_channels_masked_image + num_channels_mask}. Please verify the config of"
                     " `pipeline.unet` or your `mask_image` or `image` input."
                 )
         elif num_channels_unet != 4:
@@ -1645,11 +1644,11 @@ class StableDiffusionXLControlNetUnionInpaintPipeline(
         num_warmup_steps = max(len(timesteps) - num_inference_steps * self.scheduler.order, 0)
 
         if (
-            denoising_end is not None
-            and denoising_start is not None
-            and denoising_value_valid(denoising_end)
-            and denoising_value_valid(denoising_start)
-            and denoising_start >= denoising_end
+                denoising_end is not None
+                and denoising_start is not None
+                and denoising_value_valid(denoising_end)
+                and denoising_value_valid(denoising_start)
+                and denoising_start >= denoising_end
         ):
             raise ValueError(
                 f"`denoising_start`: {denoising_start} cannot be larger than or equal to `denoising_end`: "
@@ -1674,7 +1673,9 @@ class StableDiffusionXLControlNetUnionInpaintPipeline(
                 latent_model_input = self.scheduler.scale_model_input(latent_model_input, t)
 
                 added_cond_kwargs = {"text_embeds": add_text_embeds, "time_ids": add_time_ids, \
-                    "control_type":union_control_type.reshape(1, -1).to(device, dtype=prompt_embeds.dtype).repeat(batch_size * num_images_per_prompt * 2, 1)}
+                                     "control_type": union_control_type.reshape(1, -1).to(device,
+                                                                                          dtype=prompt_embeds.dtype).repeat(
+                                         batch_size * num_images_per_prompt * 2, 1)}
 
                 # controlnet(s) inference
                 if guess_mode and self.do_classifier_free_guidance:
