@@ -18,14 +18,16 @@ class SDXLControlnetInpaint:
 
     def setup(self):
         vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16,
-                                            local_files_only=True)
+                                            cache_dir=config.CACHE_DIR, local_files_only=True)
         controlnet = ControlNetModel_Union.from_pretrained(config.PATH_SDXL_CONTROLNET_UNION,
                                                            torch_dtype=torch.float16, use_safetensors=True)
         self.pipe = StableDiffusionXLControlNetUnionInpaintPipeline.from_pretrained(
-            "SG161222/RealVisXL_V5.0", controlnet=controlnet,
+            "SG161222/RealVisXL_V5.0",
+            controlnet=controlnet,
             vae=vae,
             torch_dtype=torch.float16,
             variant='fp16',
+            cache_dir=config.CACHE_DIR,
             local_files_only=True
         )
         self.pipe.scheduler = DPMSolverMultistepScheduler.from_config(self.pipe.scheduler.config)
