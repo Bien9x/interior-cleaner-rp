@@ -10,6 +10,20 @@ from diffusers import DPMSolverMultistepScheduler
 from utils import pil_ensure_rgb
 import os
 
+def composite_mask(dest, mask):
+  dest = np.asarray(dest)
+  mask = np.asarray(mask)
+  mask = mask / 255.0
+  if len(mask.shape) == 2:
+    mask = mask[...,np.newaxis]
+  bg = np.zeros_like(dest,dtype=np.uint8)
+  inverted_mask = 1.0 - mask
+  print(mask.shape, bg.shape)
+  print(inverted_mask.shape, dest.shape)
+  dest = dest * inverted_mask
+  src =  bg * mask
+  dest = dest + src
+  return Image.fromarray(dest.astype(np.uint8))
 
 class SDXLControlnetInpaint:
     def __init__(self):
@@ -62,11 +76,7 @@ class SDXLControlnetInpaint:
         new_width, new_height = int(width * ratio) // 8 * 8, int(height * ratio) // 8 * 8
         image = image.resize((new_width, new_height))
         mask = mask.resize((new_width, new_height))
-
-        mask_data = np.array(mask)
-        controlnet_image = np.array(image)
-        controlnet_image[mask_data > 0] = 0
-        controlnet_image = Image.fromarray(controlnet_image)
+        controlnet_image = composite_mask(image,mask)
         images = self.pipe(prompt=prompt,
                            image=image,
                            mask_image=mask,
