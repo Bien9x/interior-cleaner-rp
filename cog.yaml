@@ -2,12 +2,6 @@ build:
   gpu: true
   cuda: "12.4"
   python_version: "3.11.1"
-  system_packages:
-    - "libgl1-mesa-glx"
-    - "ffmpeg"
-    - "libsm6"
-    - "libxext6"
-    - "wget"
   python_packages:
     - "pandas"
     - "diffusers==0.32.2"
@@ -19,5 +13,10 @@ build:
     - "hf-transfer"
     - "simple_lama_inpainting"
     - "timm"
-
+  system_packages:
+    - "libgl1-mesa-glx"
+    - "ffmpeg"
+    - "libsm6"
+    - "libxext6"
+    - "wget"
 predict: "predict.py:Predictor"
