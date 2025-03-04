@@ -1,0 +1,17 @@
+build:
+  gpu: true
+  cuda: "12.4"
+  python_version: "3.11.1"
+  python_packages:
+    - "pandas"
+    - "diffusers==0.32.2"
+    - "torch==2.5.1"
+    - "einops"
+    - "transformers==4.48.3"
+    - "accelerate==1.3.0"
+    - "huggingface-hub"
+    - "hf-transfer"
+    - "simple_lama_inpainting"
+    - "timm"
+
+predict: "predict.py:Predictor"
