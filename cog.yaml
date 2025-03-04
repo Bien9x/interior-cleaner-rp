@@ -4,6 +4,7 @@ build:
   python_version: "3.11"
   python_packages:
     - "pandas"
+    - "opencv-python-headless"
     - "diffusers==0.32.2"
     - "torch==2.5.1"
     - "einops"
