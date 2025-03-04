@@ -9,7 +9,6 @@ import timm
 from diffusers import AutoencoderKL, DiffusionPipeline
 import torch
 from torch.hub import download_url_to_file
-from simple_lama_inpainting.models.model import LAMA_MODEL_URL
 sys.path.append('.')
 import config
 
@@ -18,7 +17,7 @@ if os.path.exists(config.CACHE_DIR):
 os.makedirs(config.CACHE_DIR, exist_ok=True)
 os.makedirs(config.PATH_SDXL_CONTROLNET_UNION, exist_ok=True)
 # lama
-download_url_to_file(LAMA_MODEL_URL,config.PATH_LAMA)
+download_url_to_file(config.LAMA_MODEL_URL,config.PATH_LAMA)
 # tagger model
 model = timm.create_model("hf-hub:" + config.MODEL_TAGGER_ID, cache_dir=config.CACHE_DIR)
 model_weights = timm.models.load_state_dict_from_hf(config.MODEL_TAGGER_ID, cache_dir=config.CACHE_DIR)

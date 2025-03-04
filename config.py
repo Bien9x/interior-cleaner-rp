@@ -4,3 +4,4 @@ PATH_SDXL_CONTROLNET_UNION = CACHE_DIR + "/controlnet-union-sdxl"
 MODEL_TAGGER_ID = 'SmilingWolf/wd-vit-tagger-v3'
 URL_CONTROLNET_CONFIG = 'https://huggingface.co/xinsir/controlnet-union-sdxl-1.0/resolve/main/config_promax.json'
 URL_CONTROLNET_WEIGHT = 'https://huggingface.co/xinsir/controlnet-union-sdxl-1.0/resolve/main/diffusion_pytorch_model_promax.safetensors'
+LAMA_MODEL_URL = "https://github.com/enesmsahin/simple-lama-inpainting/releases/download/v0.1.0/big-lama.pt"
