@@ -1,5 +1,5 @@
 import time
-
+from typing import List
 import torch
 from models.inpaint.lama import Lama
 from models.diffusion.sdxl import SDXLControlnetInpaint
@@ -62,11 +62,11 @@ class Predictor(BasePredictor):
                 ),
                 seed:int =Input(
                     description="Random seed. Leave blank to randomize the seed", default=None
-                )):
+                ))-> List[Path]:
         """Run a single prediction on the model"""
         start_time = time.time()
-        image = Image.open(image_path)
-        mask = Image.open(mask_image_path).convert('L')
+        image = Image.open(image)
+        mask = Image.open(mask).convert('L')
         width, height = image.size
         orig_resolution = min(width, height)
         if orig_resolution > self.max_inference_resolution:
