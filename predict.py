@@ -33,9 +33,9 @@ class Predictor(BasePredictor):
         print(f"setup time: {end_time - start_time}")
 
     @torch.inference_mode()
-    def predict(self, image_path: Path = Input(
+    def predict(self, image: Path = Input(
                     description="Input image",
-                ), mask_image_path: Path = Input(
+                ), mask: Path = Input(
                     description="Mask area. White pixels are clean objects and black pixels are preserved",
                 ),
                 neg_prompt: str = Input(
@@ -60,7 +60,7 @@ class Predictor(BasePredictor):
                 grow_mask_by: int = Input(
                     description="Mask expansion", ge=0, le=40, default=33
                 ),
-                seed=Input(
+                seed:int =Input(
                     description="Random seed. Leave blank to randomize the seed", default=None
                 )):
         """Run a single prediction on the model"""
