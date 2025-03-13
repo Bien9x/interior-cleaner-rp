@@ -10,7 +10,7 @@ class Upscaler:
 
     def setup(self):
         self.model = RealESRGAN(self.device, scale=4)
-        self.model.load_weights('weights/RealESRGAN_x4.pth', download=True)
+        self.model.load_weights('weights/RealESRGAN_x4.pth', download=False)
 
     def __call__(self, image):
         image = pil_ensure_rgb(image)
