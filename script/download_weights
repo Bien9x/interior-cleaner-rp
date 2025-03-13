@@ -9,7 +9,6 @@ import timm
 from diffusers import AutoencoderKL, DiffusionPipeline, DDIMScheduler
 import torch
 from torch.hub import download_url_to_file
-from RealESRGAN import RealESRGAN
 
 sys.path.append('.')
 import config
