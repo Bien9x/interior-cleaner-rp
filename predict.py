@@ -22,7 +22,7 @@ class Predictor(BasePredictor):
         """Load the model into memory to make running multiple predictions efficient"""
         print("Loading pipeline...")
         self.diffusion_inpaint.setup()
-        self.upscaler.load_weights()
+        self.upscaler.load_weights(cache_path="weights/RealESRGAN_x4.pth")
         end_time = time.time()
         print(f"setup time: {end_time - start_time}")
 

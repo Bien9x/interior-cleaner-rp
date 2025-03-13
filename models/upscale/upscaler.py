@@ -61,8 +61,8 @@ def pad_reflect(image, pad_size):
     new_image[pad_size:-pad_size, pad_size:-pad_size, :] = image
     new_image[0:pad_size, pad_size:-pad_size, :] = np.flip(image[0:pad_size, :, :], axis=0)  # # top
     new_image[-pad_size:, pad_size:-pad_size, :] = np.flip(image[-pad_size:, :, :], axis=0)  # # bottom
-    new_image[:, 0:pad_size, :] = np.flip(new_image[:, pad_size : pad_size * 2, :], axis=1)  # # left
-    new_image[:, -pad_size:, :] = np.flip(new_image[:, -pad_size * 2 : -pad_size, :], axis=1)  # right
+    new_image[:, 0:pad_size, :] = np.flip(new_image[:, pad_size: pad_size * 2, :], axis=1)  # # left
+    new_image[:, -pad_size:, :] = np.flip(new_image[:, -pad_size * 2: -pad_size, :], axis=1)  # right
     return new_image
 
 
@@ -134,10 +134,10 @@ def stitch_together(patches, padded_image_shape, target_shape, padding_size=4):
             row += 1
             col = 0
         complete_image[
-            row * patch_size : (row + 1) * patch_size, col * patch_size : (col + 1) * patch_size, :
+        row * patch_size: (row + 1) * patch_size, col * patch_size: (col + 1) * patch_size, :
         ] = patches[i]
         col += 1
-    return complete_image[0 : target_shape[0], 0 : target_shape[1], :]
+    return complete_image[0: target_shape[0], 0: target_shape[1], :]
 
 
 @torch.no_grad()
@@ -268,10 +268,11 @@ class RealESRGAN:
         self.device = device
         self.model.to(device=device)
 
-    def load_weights(self):
+    def load_weights(self, cache_path=None):
         assert self.scale in [2, 4], "You can download models only with scales: 2, 4"
         config = HF_MODELS[self.scale]
-        cache_path = hf_hub_download(config["repo_id"], filename=config["filename"])
+        if cache_path is None:
+            cache_path = hf_hub_download(config["repo_id"], filename=config["filename"])
         loadnet = torch.load(cache_path, weights_only=True)
         if "params" in loadnet:
             self.model.load_state_dict(loadnet["params"], strict=True)
@@ -301,7 +302,7 @@ class RealESRGAN:
         with torch.inference_mode():
             res = self.model(image[0:batch_size])
             for i in range(batch_size, image.shape[0], batch_size):
-                res = torch.cat((res, self.model(image[i : i + batch_size])), 0)
+                res = torch.cat((res, self.model(image[i: i + batch_size])), 0)
 
         scale = self.scale
         sr_image = einops.rearrange(res.clamp(0, 1), "b c h w -> b h w c").cpu().numpy()
