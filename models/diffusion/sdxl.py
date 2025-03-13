@@ -1,96 +1,90 @@
-import cv2
-import torch
-import numpy as np
 from PIL import Image
-from diffusers import AutoencoderKL
+import torch
+from diffusers import DDIMScheduler, DiffusionPipeline
+import torch.nn.functional as F
+from torchvision.transforms.functional import to_tensor, gaussian_blur
 
 import config
-from modules.controlnet_plus import ControlNetModel_Union, StableDiffusionXLControlNetUnionInpaintPipeline
-from diffusers import DPMSolverMultistepScheduler
 from utils import pil_ensure_rgb
 import os
 
-def composite_mask(dest, mask):
-  dest = np.asarray(dest)
-  mask = np.asarray(mask)
-  mask = mask / 255.0
-  if len(mask.shape) == 2:
-    mask = mask[...,np.newaxis]
-  bg = np.zeros_like(dest,dtype=np.uint8)
-  inverted_mask = 1.0 - mask
-  print(mask.shape, bg.shape)
-  print(inverted_mask.shape, dest.shape)
-  dest = dest * inverted_mask
-  src =  bg * mask
-  dest = dest + src
-  return Image.fromarray(dest.astype(np.uint8))
 
 class SDXLControlnetInpaint:
     def __init__(self):
         self.pipe = None
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.dtype = torch.float16
+        self.base_model_name = 'SG161222/RealVisXL_V5.0'
 
     def setup(self):
-        vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16,
-                                            cache_dir=config.CACHE_DIR, local_files_only=True)
-        controlnet = ControlNetModel_Union.from_pretrained(config.PATH_SDXL_CONTROLNET_UNION,
-                                                           torch_dtype=torch.float16, use_safetensors=True)
-        self.pipe = StableDiffusionXLControlNetUnionInpaintPipeline.from_pretrained(
-            "SG161222/RealVisXL_V5.0",
-            controlnet=controlnet,
-            vae=vae,
-            torch_dtype=torch.float16,
-            variant='fp16',
+        device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+        scheduler = DDIMScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear", clip_sample=False,
+                                  set_alpha_to_one=False)
+        self.pipe = DiffusionPipeline.from_pretrained(
+            self.base_model_name,
+            custom_pipeline="pipeline_stable_diffusion_xl_attentive_eraser.py",
+            scheduler=scheduler,
+            variant="fp16",
+            use_safetensors=True,
+            torch_dtype=self.dtype,
             cache_dir=config.CACHE_DIR,
-            local_files_only=True
-        )
-        self.pipe.scheduler = DPMSolverMultistepScheduler.from_config(self.pipe.scheduler.config)
+            local_files_only=True,
+        ).to(device)
         self.pipe = self.pipe.to(self.device)
+
+    def preprocess_image(self, image: Image.Image):
+        image = to_tensor(image)
+        image = image.unsqueeze_(0).float() * 2 - 1  # [0,1] --> [-1,1]
+        if image.shape[1] != 3:
+            image = image.expand(-1, 3, -1, -1)
+        image = F.interpolate(image, (1024, 1024))
+        image = image.to(self.dtype).to(self.device)
+        return image
+
+    def preprocess_mask(self, mask: Image.Image):
+        mask = to_tensor(mask)
+        mask = mask.unsqueeze_(0).float()  # 0 or 1
+        mask = F.interpolate(mask, (1024, 1024))
+        mask = gaussian_blur(mask, kernel_size=(77, 77))
+        mask[mask < 0.1] = 0
+        mask[mask >= 0.1] = 1
+        mask = mask.to(self.dtype).to(self.device)
+        return mask
 
     def __call__(self,
                  image: Image,
                  mask: Image,
-                 prompt: str,
-                 neg_prompt: str = 'longbody, lowres, bad anatomy, bad hands, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality',
-                 guidance_scale: float = 5.0,
-                 controlnet_scale: float = 0.9,
-                 strength: float = 0.7,
-                 num_steps: int = 50,
-                 num_images: int = 1,
-                 grow_mask_by: int = 32,
                  seed=None):
         if seed is None:
             seed = int.from_bytes(os.urandom(2), "big")
             print(f"Using seed: {seed}")
+        prompt = ""  # Set prompt to null
         image = pil_ensure_rgb(image)
         mask = mask.convert('L')
-
-        if grow_mask_by > 0:
-            mask_data = np.asarray(mask)
-            kernel = np.ones((grow_mask_by, grow_mask_by), np.uint8)
-            mask_data = cv2.dilate(mask_data, kernel)
-            mask = Image.fromarray(mask_data)
-
         width, height = image.size
-        ratio = np.sqrt(1024. * 1024. / (width * height))
-        new_width, new_height = int(width * ratio) // 8 * 8, int(height * ratio) // 8 * 8
-        image = image.resize((new_width, new_height))
-        mask = mask.resize((new_width, new_height))
-        controlnet_image = composite_mask(image,mask)
-        images = self.pipe(prompt=prompt,
-                           image=image,
-                           mask_image=mask,
-                           control_image_list=[0, 0, 0, 0, 0, 0, 0, controlnet_image],
-                           negative_prompt=neg_prompt,
-                           guidance_scale=guidance_scale,
-                           controlnet_conditioning_scale=controlnet_scale,
-                           strength=strength,
-                           num_images_per_prompt=num_images,
-                           generator=torch.Generator().manual_seed(seed),
-                           width=width,
-                           height=height,
-                           num_inference_steps=num_steps,
-                           union_control=True,
-                           union_control_type=torch.Tensor([0, 0, 0, 0, 0, 0, 0, 1]),
-                           ).images
-        return images
+        # ratio = np.sqrt(1024. * 1024. / (width * height))
+        # new_width, new_height = int(width * ratio) // 8 * 8, int(height * ratio) // 8 * 8
+        # image = image.resize((new_width, new_height))
+        # mask = mask.resize((new_width, new_height))
+        image = self.preprocess_image(image)
+        mask = self.preprocess_mask(mask)
+        image = self.pipe(
+            prompt=prompt,
+            image=image,
+            mask_image=mask,
+            height=1024,
+            width=1024,
+            AAS=True,  # enable AAS
+            strength=0.8,  # inpainting strength
+            rm_guidance_scale=9,  # removal guidance scale
+            ss_steps=9,  # similarity suppression steps
+            ss_scale=0.3,  # similarity suppression scale
+            AAS_start_step=0,  # AAS start step
+            AAS_start_layer=34,  # AAS start layer
+            AAS_end_layer=70,  # AAS end layer
+            num_inference_steps=50,  # number of inference steps # AAS_end_step = int(strength*num_inference_steps)
+            generator=torch.Generator(device=self.device).manual_seed(seed),
+            guidance_scale=1,
+        ).images[0]
+        return image

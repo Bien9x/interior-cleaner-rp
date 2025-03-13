@@ -6,9 +6,10 @@ import sys
 
 from huggingface_hub import hf_hub_download
 import timm
-from diffusers import AutoencoderKL, DiffusionPipeline
+from diffusers import AutoencoderKL, DiffusionPipeline, DDIMScheduler
 import torch
 from torch.hub import download_url_to_file
+
 sys.path.append('.')
 import config
 
@@ -17,21 +18,27 @@ if os.path.exists(config.CACHE_DIR):
 os.makedirs(config.CACHE_DIR, exist_ok=True)
 os.makedirs(config.PATH_SDXL_CONTROLNET_UNION, exist_ok=True)
 # lama
-download_url_to_file(config.LAMA_MODEL_URL,config.PATH_LAMA)
+download_url_to_file(config.LAMA_MODEL_URL, config.PATH_LAMA)
 # tagger model
 model = timm.create_model("hf-hub:" + config.MODEL_TAGGER_ID, cache_dir=config.CACHE_DIR)
 model_weights = timm.models.load_state_dict_from_hf(config.MODEL_TAGGER_ID, cache_dir=config.CACHE_DIR)
 csv_path = hf_hub_download(repo_id=config.MODEL_TAGGER_ID, filename="selected_tags.csv", cache_dir=config.CACHE_DIR)
 
 # diffusers
-download_url_to_file(config.URL_CONTROLNET_CONFIG,os.path.join(config.PATH_SDXL_CONTROLNET_UNION,'config.json'))
-download_url_to_file(config.URL_CONTROLNET_WEIGHT,os.path.join(config.PATH_SDXL_CONTROLNET_UNION,"diffusion_pytorch_model.safetensors"))
-vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16,
-                                    cache_dir=config.CACHE_DIR)
+download_url_to_file(config.URL_CONTROLNET_CONFIG, os.path.join(config.PATH_SDXL_CONTROLNET_UNION, 'config.json'))
+download_url_to_file(config.URL_CONTROLNET_WEIGHT,
+                     os.path.join(config.PATH_SDXL_CONTROLNET_UNION, "diffusion_pytorch_model.safetensors"))
+# vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16,
+#                                     cache_dir=config.CACHE_DIR)
+scheduler = DDIMScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear", clip_sample=False,
+                                  set_alpha_to_one=False)
 pipe = DiffusionPipeline.from_pretrained(
-    "SG161222/RealVisXL_V5.0",
-    vae=vae,
+    "stabilityai/stable-diffusion-xl-base-1.0",
+    #    vae=vae,
+    custom_pipeline="pipeline_stable_diffusion_xl_attentive_eraser.py",
+    scheduler=scheduler,
+    variant="fp16",
+    use_safetensors=True,
     torch_dtype=torch.float16,
-    variant='fp16',
     cache_dir=config.CACHE_DIR
 )
