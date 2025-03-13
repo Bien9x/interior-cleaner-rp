@@ -46,5 +46,4 @@ pipe = DiffusionPipeline.from_pretrained(
     cache_dir=config.CACHE_DIR
 )
 # upscaler
-model = RealESRGAN('cpu', scale=4)
-model.load_weights('weights/RealESRGAN_x4.pth', download=True)
+hf_hub_download(repo_id='sberbank-ai/Real-ESRGAN',filename='RealESRGAN_x4.pth')
