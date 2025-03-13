@@ -8,6 +8,8 @@ import config
 from utils import pil_ensure_rgb
 import os
 
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
 
 class SDXLControlnetInpaint:
     def __init__(self):
@@ -23,7 +25,7 @@ class SDXLControlnetInpaint:
                                   set_alpha_to_one=False)
         self.pipe = DiffusionPipeline.from_pretrained(
             self.base_model_name,
-            custom_pipeline="pipeline_stable_diffusion_xl_attentive_eraser.py",
+            custom_pipeline=os.path.join(dir_path, "pipeline_stable_diffusion_xl_attentive_eraser.py"),
             scheduler=scheduler,
             variant="fp16",
             use_safetensors=True,

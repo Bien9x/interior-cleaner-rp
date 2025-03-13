@@ -32,13 +32,10 @@ os.makedirs(config.CACHE_DIR, exist_ok=True)
 #                      os.path.join(config.PATH_SDXL_CONTROLNET_UNION, "diffusion_pytorch_model.safetensors"))
 # vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16,
 #                                     cache_dir=config.CACHE_DIR)
-scheduler = DDIMScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear", clip_sample=False,
-                                  set_alpha_to_one=False)
+
 pipe = DiffusionPipeline.from_pretrained(
     "stabilityai/stable-diffusion-xl-base-1.0",
     #    vae=vae,
-    custom_pipeline="pipeline_stable_diffusion_xl_attentive_eraser.py",
-    scheduler=scheduler,
     variant="fp16",
     use_safetensors=True,
     torch_dtype=torch.float16,
